@@ -19,9 +19,10 @@
 | `docs/06-FEATURE-IDEAS.md` | Extended feature catalogue (must-have, should-have, nice-to-have) beyond the original problem statement. |
 | `supabase/config.toml` | Local Supabase configuration — ports, buckets, auth, per-function JWT rules. |
 | `supabase/migrations/0001_schema.sql` | Backend schema — tables, enums, indexes, views, functions/RPCs, triggers, RLS policies, realtime publication. |
+| `supabase/migrations/0002_grn.sql` | Goods-receipt module — vendors, purchase orders, GRNs, lines, put-aways, documents, timeline; RPCs, RLS, storage bucket. |
 | `supabase/seed.sql` | Deterministic mock data generator — 1 warehouse, 4 rows, 160 bins, 800 SKUs, stock, expiry lots, sample orders. |
 | `supabase/functions/` | Edge Functions: `csv-import`, `alert-digest`, `label-pdf`, `order-webhook`, plus `_shared/` and Deno tests. |
-| `supabase/tests/` | pgTAP suites — RLS (`001`), movement invariants (`002`), FEFO allocation and scan verification (`003`). |
+| `supabase/tests/` | pgTAP suites — RLS (`001`), movement invariants (`002`), FEFO allocation and scan verification (`003`), goods receipt end to end (`004`). |
 | `supabase/templates/` | Downloadable CSV templates for each import kind. |
 | `web/` | The React 18 + Vite + TypeScript app — every screen in the app-flow document. |
 | `.github/workflows/ci.yml` | CI: lint, typecheck, unit tests, build, `supabase db lint`, pgTAP, Deno checks. |
@@ -49,6 +50,7 @@
 - **Label printing** — QR labels for bins and barcode labels for products.
 - **Cycle counting** — scan-driven stock audits with variance reports.
 - **Pick lists with route ordering** — bins ordered by row → bin for a shortest walking path.
+- **Goods receipt (GRN)** — PO → truck arrival → seal check → per-SKU verification by scan → GRN → put-away → inventory. Partial deliveries, multiple GRNs per PO, automatic short/excess, wrong-SKU blocking, damaged/rejected stock kept out of inventory, evidence uploads, a five-figure admin dashboard and a full timeline.
 
 See `docs/06-FEATURE-IDEAS.md` for the full extended catalogue.
 
@@ -228,6 +230,7 @@ Every route in `docs/03-APP-FLOW.md` is implemented.
 | `/bins/:id` | staff, admin | Bin contents, utilisation, value; receive/transfer shortcuts. |
 | `/orders`, `/orders/new`, `/orders/:id` | staff, admin | Order list, multi-line intake with paste-SKUs, pick list grouped by row with scan verification and presence. |
 | `/receive` | staff, admin | Inward stock with lot and expiry, put-away suggestions. |
+| `/grn`, `/grn/new`, `/grn/:id` | staff, admin | Goods receipts: register a truck against a PO (vehicle, driver, seal, challan, invoice), count each SKU by scan, verify, put away into bins, attach evidence, read the timeline. Admins see the KPI strip. |
 | `/transfer` | staff, admin | Source bin → lot → destination bin. |
 | `/scan` | staff, admin | Full-page scanner hub resolving bins and products. |
 | `/movements` | staff, admin | The audit trail: filters, infinite scroll, CSV export. |
@@ -236,6 +239,7 @@ Every route in `docs/03-APP-FLOW.md` is implemented.
 | `/admin` | admin | Live dashboard — 8 KPIs, stock by row, bin heat-map, alert feed, orders in progress, expiring soon. |
 | `/admin/alerts` | admin | Alert centre: tabs, filters, acknowledge / snooze / resolve, bulk actions. |
 | `/admin/products`, `/admin/products/new`, `/admin/products/:id/edit` | admin | Catalogue with live stock; product form with live SKU/barcode uniqueness. |
+| `/admin/purchase-orders` | admin | Raise POs (vendor, warehouse, lines), see received vs ordered, jump to the truck registration, close a fulfilled PO. |
 | `/admin/locations` | admin | Warehouse → row → bin tree, bulk bin ranges, capacity, activation. |
 | `/admin/expiry` | admin | Urgency buckets, weekly chart, write-offs. |
 | `/admin/counts` | admin | Create, monitor, review variances, approve (posts corrections). |
@@ -245,13 +249,30 @@ Every route in `docs/03-APP-FLOW.md` is implemented.
 
 ---
 
+## 8b. Goods receipt (GRN) module
+
+Added in `supabase/migrations/0002_grn.sql`. It reuses the existing systems rather than duplicating them:
+
+| Concern | How the module does it |
+|---|---|
+| Inventory | Only `putaway_grn_line()` raises stock, and it does so by calling the existing `record_movement('inward', …, reference_type 'grn')`. Damaged and rejected units never reach that call. |
+| Discrepancies | The existing alert engine: a new `grn_discrepancy` alert type, keyed by GRN (the dedupe index gained a `grn_id` column, and `upsert_alert()` an optional ninth argument — existing callers are unaffected). |
+| Roles | The same `profiles` / `require_active()` / `require_admin()` / RLS pattern. Staff receive, count, verify and put away; only admins raise POs, resolve discrepancies and cancel. |
+| Audit | `audit_row_change()` on the new tables, `stock_movements` for every put-away (with `performed_by` and the GRN reference), and a per-GRN `grn_events` timeline that is insert-only. |
+
+**Flow:** `create_purchase_order` (admin) → `create_grn` (truck, driver, seal, challan, invoice; staff recorded from the session; a broken or missing seal raises the alert immediately) → `record_grn_line` per SKU by barcode/SKU (accepted + damaged + rejected must equal received; perishables need an expiry; a product not on the PO is returned as `wrong_sku` and logged, never received) → `verify_grn` (issues the GRN, computes short/excess, updates the PO, raises the discrepancy alert) → `putaway_grn_line` per bin (inventory rises by exactly the accepted quantity; the GRN completes when every accepted unit is in a bin).
+
+**Numbers** are generated: `PO-YYYY-#####`, `GRN-YYYY-#####`. Partial deliveries and several GRNs per PO are normal — a second GRN snapshots what earlier trucks already brought as *previously received*. Completed GRNs cannot be deleted (no delete policy, plus a trigger).
+
+**Evidence** goes to the private `grn-documents` bucket; the detail page flags a seal photo as needed when the seal was not intact, and a damage photo when anything was damaged or rejected.
+
 ## 9. Validation status
 
 ### Database — verified by running it
 `supabase/migrations/0001_schema.sql` and `supabase/seed.sql` were applied end-to-end on PostgreSQL 15.19 (with a shim emulating Supabase's `auth`/`storage` schemas and roles), and the assertions in `supabase/tests/` were executed against that database:
 
 - Migration + seed apply cleanly and produce exactly the documented data: **1 warehouse · 4 rows · 160 bins · 800 products · 1,503 stock lots · 1,564 movements · 40 orders · 117 pick tasks · 239 alerts across all 8 alert types**.
-- **59 assertions pass** — 18 RLS (`001`), 20 movement invariants (`002`), 21 allocation and scan verification (`003`).
+- **110 assertions pass** — 18 RLS (`001`), 20 movement invariants (`002`), 21 allocation and scan verification (`003`), 51 goods receipt (`004`: the spec's worked example, *ordered 100 / received 98 / accepted 96 / damaged 2 / short 2*, ends with inventory up by exactly 96; wrong SKU blocked and logged; broken seal alerts; second partial truck sees 98 previously received; completed GRN undeletable).
 - Invariants hold: no `reserved > quantity`, no negative quantities, no expired lot left `available`, reservations equal open pick-task quantities, every `location_code` matches `WH-ROW-BIN`.
 - FEFO proven where it matters: with the soonest-expiring lot deliberately placed in the *farthest* row, allocation still consumes it first, while the pick list is still ordered for the shortest walk.
 - No oversell: a competing order for the same SKU is `partially_allocated` with the shortfall recorded as a short task, never promised twice.
@@ -261,7 +282,7 @@ Every route in `docs/03-APP-FLOW.md` is implemented.
 ### Frontend — verified by building and running it
 - `npm run lint` — clean, zero warnings.
 - `npx tsc --noEmit` — clean, for both the app and the e2e project; no `any` at an RPC call site.
-- `npm test` — **58 tests pass**, including a jsdom smoke suite that mounts the real `App` (providers, router, shell, lazy pages) and proves the guards: a visitor is bounced to sign-in, staff see the warehouse nav but not the admin section, an admin sees both plus the alert bell, and staff hitting `/admin/products` are redirected instead of shown the catalogue.
+- `npm test` — **64 tests pass**, including a jsdom smoke suite that mounts the real `App` (providers, router, shell, lazy pages) and proves the guards: a visitor is bounced to sign-in, staff see the warehouse nav but not the admin section, an admin sees both plus the alert bell, and staff hitting `/admin/products` are redirected instead of shown the catalogue.
 - `npm run build` — production bundle with route-level splitting; the scanner (442 kB) and charts (372 kB) load only on the screens that use them, and the PWA service worker and icons are generated.
 
 ### Not yet run here

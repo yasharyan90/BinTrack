@@ -26,6 +26,11 @@ const CountEntry = lazy(() => import('@/pages/staff/CountEntry'))
 const Profile = lazy(() => import('@/pages/staff/Profile'))
 const More = lazy(() => import('@/pages/staff/More'))
 
+const GrnList = lazy(() => import('@/pages/grn/GrnList'))
+const GrnNew = lazy(() => import('@/pages/grn/GrnNew'))
+const GrnDetail = lazy(() => import('@/pages/grn/GrnDetail'))
+const PurchaseOrders = lazy(() => import('@/pages/admin/PurchaseOrders'))
+
 const Dashboard = lazy(() => import('@/pages/admin/Dashboard'))
 const AlertCentre = lazy(() => import('@/pages/admin/AlertCentre'))
 const AdminProducts = lazy(() => import('@/pages/admin/Products'))
@@ -68,6 +73,9 @@ export function AppRoutes() {
             <Route path="/orders/new" element={<OrderNew />} />
             <Route path="/orders/:orderId" element={<OrderPick />} />
             <Route path="/receive" element={<Receive />} />
+            <Route path="/grn" element={<GrnList />} />
+            <Route path="/grn/new" element={<GrnNew />} />
+            <Route path="/grn/:grnId" element={<GrnDetail />} />
             <Route path="/transfer" element={<Transfer />} />
             <Route path="/scan" element={<ScanHub />} />
             <Route path="/movements" element={<Movements />} />
@@ -82,6 +90,7 @@ export function AppRoutes() {
               <Route path="/admin/products" element={<AdminProducts />} />
               <Route path="/admin/products/new" element={<ProductForm />} />
               <Route path="/admin/products/:productId/edit" element={<ProductForm />} />
+              <Route path="/admin/purchase-orders" element={<PurchaseOrders />} />
               <Route path="/admin/locations" element={<Locations />} />
               <Route path="/admin/import" element={<ImportPage />} />
               <Route path="/admin/export" element={<ExportPage />} />

@@ -171,6 +171,51 @@ describe('app composition', () => {
     )
   })
 
+  it('staff can reach the goods-receipt screens', async () => {
+    signedInAs({ id: 'staff-1', role: 'staff' })
+    await renderApp('/grn')
+
+    expect(await screen.findByRole('heading', { name: 'Goods receipts' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /register arrival/i })).toBeInTheDocument()
+    // The nav carries the module for staff too.
+    expect(screen.getByRole('link', { name: 'Goods receipts' })).toBeInTheDocument()
+    // Staff get the list but not the admin KPI strip ("Total GRNs" lives only there;
+    // "Pending verification" is also a filter chip, so it is not a useful probe).
+    expect(screen.queryByText('Total GRNs')).not.toBeInTheDocument()
+  })
+
+  it('the arrival form records the receiving staff member from the session', async () => {
+    signedInAs({ id: 'staff-1', role: 'staff' })
+    await renderApp('/grn/new')
+
+    expect(await screen.findByRole('heading', { name: 'Register truck arrival' })).toBeInTheDocument()
+    expect(screen.getByText('Priya Staff')).toBeInTheDocument()
+    expect(screen.getByText(/recorded from your session/i)).toBeInTheDocument()
+    for (const label of ['Truck / vehicle number', 'Driver name', 'Vendor seal number', 'Invoice number']) {
+      expect(screen.getByLabelText(new RegExp(label, 'i'))).toBeInTheDocument()
+    }
+  })
+
+  it('admins see purchase orders and the five GRN figures', async () => {
+    signedInAs({ id: 'admin-1', role: 'inventory_admin' })
+    await renderApp('/admin/purchase-orders')
+
+    expect(await screen.findByRole('heading', { name: 'Purchase orders' })).toBeInTheDocument()
+    for (const kpi of ['Total GRNs', 'Pending verification', 'Discrepancies', 'Pending put-away', 'Completed']) {
+      expect(screen.getByText(kpi)).toBeInTheDocument()
+    }
+  })
+
+  it('keeps staff away from purchase orders', async () => {
+    signedInAs({ id: 'staff-1', role: 'staff' })
+    await renderApp('/admin/purchase-orders')
+
+    expect(await screen.findByLabelText('Search products')).toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.queryByRole('heading', { name: 'Purchase orders' })).not.toBeInTheDocument(),
+    )
+  })
+
   it('renders a friendly page for an unknown route', async () => {
     signedInAs({ id: 'staff-1', role: 'staff' })
     await renderApp('/nowhere-at-all')

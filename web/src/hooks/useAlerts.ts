@@ -14,12 +14,14 @@ export const ALERT_TYPE_LABELS: Record<AlertType, string> = {
   bin_over_capacity: 'Bin over capacity',
   pick_discrepancy: 'Pick discrepancy',
   order_short: 'Short order',
+  grn_discrepancy: 'GRN discrepancy',
 }
 
 export type AlertWithRefs = Alert & {
   product: { id: string; sku: string; name: string } | null
   bin: { id: string; location_code: string } | null
   order: { id: string; order_number: string } | null
+  grn: { id: string; grn_number: string } | null
 }
 
 export function useAlerts(filters: AlertFilters = {}) {
@@ -32,7 +34,7 @@ export function useAlerts(filters: AlertFilters = {}) {
       let query = supabase
         .from('alerts')
         .select(
-          '*, product:products(id, sku, name), bin:bins(id, location_code), order:orders(id, order_number)',
+          '*, product:products(id, sku, name), bin:bins(id, location_code), order:orders(id, order_number), grn:grns(id, grn_number)',
         )
         .order('severity', { ascending: false })
         .order('last_evaluated_at', { ascending: false })

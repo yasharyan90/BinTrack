@@ -8,8 +8,12 @@ import type {
   AlertSeverity,
   AlertStatus,
   AlertType,
+  GrnDocumentKind,
+  GrnStatus,
   OrderStatus,
   PickStatus,
+  PoStatus,
+  SealStatus,
   StockStatus,
   Tables,
 } from './database'
@@ -173,4 +177,133 @@ export const DEFAULT_SETTINGS: AppSettings = {
   pick_mismatch_threshold: 2,
   serpentine_picking: false,
   email_digest_enabled: false,
+}
+
+// ---------------------------------------------------------------------------
+// Goods receipt (GRN)
+// ---------------------------------------------------------------------------
+export type Vendor = Tables<'vendors'>
+export type PurchaseOrder = Tables<'purchase_orders'>
+export type Grn = Tables<'grns'>
+
+export type GrnPutaway = {
+  id: string
+  bin_id: string
+  location_code: string
+  row_code: string
+  quantity: number
+  movement_id: string | null
+  performed_by_name: string | null
+  created_at: string
+}
+
+/** Ordered → previously received → received → accepted / damaged / rejected → short / excess. */
+export type GrnLine = {
+  id: string
+  po_line_id: string
+  product_id: string
+  sku: string
+  name: string
+  barcode: string | null
+  is_perishable: boolean
+  shelf_life_days: number | null
+  ordered_qty: number
+  previously_received_qty: number
+  received_qty: number
+  accepted_qty: number
+  damaged_qty: number
+  rejected_qty: number
+  short_qty: number
+  excess_qty: number
+  put_away_qty: number
+  remaining_to_put_away: number
+  lot_number: string | null
+  expiry_date: string | null
+  damage_note: string | null
+  counted_at: string | null
+  counted_by_name: string | null
+  putaways: GrnPutaway[]
+}
+
+export type GrnDocument = {
+  id: string
+  kind: GrnDocumentKind
+  storage_path: string
+  file_name: string | null
+  content_type: string | null
+  size_bytes: number | null
+  uploaded_by_name: string | null
+  created_at: string
+}
+
+export type GrnEvent = {
+  id: number
+  event: string
+  detail: Record<string, unknown>
+  actor_name: string
+  created_at: string
+}
+
+export type GrnDiscrepancySummary = {
+  seal_status?: SealStatus
+  short_units?: number
+  excess_units?: number
+  damaged_units?: number
+  rejected_units?: number
+  short_lines?: number
+  excess_lines?: number
+}
+
+export type GrnDetail = {
+  grn: Grn & {
+    received_by_name: string | null
+    verified_by_name: string | null
+    resolved_by_name: string | null
+    discrepancy_summary: GrnDiscrepancySummary
+  }
+  po: { id: string; po_number: string; status: PoStatus; expected_date: string | null; note: string | null }
+  vendor: { id: string; code: string; name: string; contact: string | null; phone: string | null }
+  warehouse: { id: string; code: string; name: string }
+  lines: GrnLine[]
+  documents: GrnDocument[]
+  events: GrnEvent[]
+}
+
+export type PoLine = {
+  id: string
+  product_id: string
+  sku: string
+  name: string
+  barcode: string | null
+  is_perishable: boolean
+  ordered_qty: number
+  received_qty: number
+  accepted_qty: number
+  remaining_qty: number
+  unit_cost: number
+}
+
+export type PoDetail = {
+  po: PurchaseOrder
+  vendor: Vendor
+  warehouse: { id: string; code: string; name: string }
+  lines: PoLine[]
+  grns: { id: string; grn_number: string; status: GrnStatus; arrived_at: string; vehicle_number: string; has_discrepancy: boolean }[]
+}
+
+/** `record_grn_line`: a wrong or unknown SKU is a result, not an exception. */
+export type RecordLineResult =
+  | { ok: true; line: GrnLine & { sku: string; name: string } }
+  | { ok: false; reason: 'wrong_sku' | 'unknown_product'; code: string; sku?: string; name?: string }
+
+export type GrnDashboard = {
+  total: number
+  pending_verification: number
+  discrepancies: number
+  pending_put_away: number
+  completed: number
+  open_purchase_orders: number
+  units_received_today: number
+  units_put_away_today: number
+  generated_at: string
 }

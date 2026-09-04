@@ -8,6 +8,7 @@ import {
   PackageX,
   ShoppingCart,
   Timer,
+  Truck,
   TrendingDown,
   Warehouse,
 } from 'lucide-react'
@@ -27,6 +28,7 @@ const TYPE_ICON: Record<AlertType, typeof AlertTriangle> = {
   bin_over_capacity: Warehouse,
   pick_discrepancy: AlertTriangle,
   order_short: ShoppingCart,
+  grn_discrepancy: Truck,
 }
 
 /**
@@ -92,6 +94,14 @@ export function AlertItem({
               className="text-small underline underline-offset-2 hover:no-underline"
             >
               {alert.order.order_number}
+            </Link>
+          )}
+          {alert.grn && (
+            <Link
+              to={`/grn/${alert.grn.id}`}
+              className="font-mono text-small underline underline-offset-2 hover:no-underline"
+            >
+              {alert.grn.grn_number}
             </Link>
           )}
           {!compact && <AlertStatusChip status={alert.status} />}

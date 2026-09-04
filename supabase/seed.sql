@@ -232,3 +232,47 @@ union all select 'stock_movements', count(*) from public.stock_movements
 union all select 'orders', count(*) from public.orders
 union all select 'pick_tasks', count(*) from public.pick_tasks
 union all select 'alerts_active', count(*) from public.alerts where status = 'active';
+
+-- ---------------------------------------------------------------------
+-- 9. Goods receipt demo: one vendor, two open purchase orders (0002).
+--    No GRN is seeded — registering the truck is the demo.
+-- ---------------------------------------------------------------------
+do $$
+declare v_vendor uuid; v_wh uuid;
+begin
+  if to_regclass('public.purchase_orders') is null then
+    raise notice 'GRN tables absent (migration 0002 not applied); skipping PO seed';
+    return;
+  end if;
+
+  insert into public.vendors (code, name, contact, email, phone)
+  values ('NIMBUSFOOD', 'Nimbus Foods Pvt Ltd', 'Meera Iyer', 'orders@nimbusfoods.example', '+91 80 4000 1234')
+  on conflict (name) do update set contact = excluded.contact returning id into v_vendor;
+
+  select id into v_wh from public.warehouses where code = 'WH1';
+
+  -- A grocery restock: two perishables and two dry goods, ordered a week ago.
+  insert into public.purchase_orders (po_number, vendor_id, warehouse_id, expected_date, note)
+  values ('PO-2026-00001', v_vendor, v_wh, current_date, 'Weekly grocery restock')
+  on conflict (po_number) do nothing;
+  insert into public.purchase_order_lines (po_id, product_id, ordered_qty, unit_cost)
+  select po.id, p.id, q.qty, p.unit_cost
+    from public.purchase_orders po
+    join (values ('DRY', 100), ('BEV', 60), ('GRC', 80), ('KIT', 40)) as q(cat, qty) on true
+    join lateral (select id, unit_cost from public.products
+                   where sku like q.cat || '-%' and is_active order by sku limit 1) p on true
+   where po.po_number = 'PO-2026-00001'
+  on conflict (po_id, product_id) do nothing;
+
+  -- Electronics, due in three days.
+  insert into public.purchase_orders (po_number, vendor_id, warehouse_id, expected_date, note)
+  values ('PO-2026-00002', v_vendor, v_wh, current_date + 3, 'Electronics top-up')
+  on conflict (po_number) do nothing;
+  insert into public.purchase_order_lines (po_id, product_id, ordered_qty, unit_cost)
+  select po.id, p.id, 25, p.unit_cost
+    from public.purchase_orders po
+    join lateral (select id, unit_cost from public.products
+                   where sku like 'ELC-%' and is_active order by sku limit 3) p on true
+   where po.po_number = 'PO-2026-00002'
+  on conflict (po_id, product_id) do nothing;
+end $$;

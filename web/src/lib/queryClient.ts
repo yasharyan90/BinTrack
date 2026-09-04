@@ -57,4 +57,10 @@ export const qk = {
   imports: () => ['imports'] as const,
   importJob: (id: string) => ['import', id] as const,
   audit: (filters: unknown) => ['audit', filters] as const,
+  vendors: () => ['vendors'] as const,
+  purchaseOrders: (filters: unknown) => ['purchase-orders', filters] as const,
+  purchaseOrder: (id: string) => ['purchase-order', id] as const,
+  grns: (filters: unknown) => ['grns', filters] as const,
+  grn: (id: string) => ['grn', id] as const,
+  grnDashboard: () => ['grn-dashboard'] as const,
 }

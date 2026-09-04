@@ -31,11 +31,16 @@ export type AlertType =
   | 'bin_over_capacity'
   | 'pick_discrepancy'
   | 'order_short'
+  | 'grn_discrepancy'
 export type AlertSeverity = 'info' | 'warning' | 'critical'
 export type AlertStatus = 'active' | 'acknowledged' | 'snoozed' | 'resolved'
 export type ImportKind = 'products' | 'bins' | 'opening_stock' | 'orders'
 export type ImportStatus = 'pending' | 'processing' | 'completed' | 'failed'
 export type CountStatus = 'open' | 'submitted' | 'approved' | 'cancelled'
+export type PoStatus = 'open' | 'partially_received' | 'received' | 'closed' | 'cancelled'
+export type GrnStatus = 'arrived' | 'verifying' | 'verified' | 'put_away' | 'completed' | 'cancelled'
+export type SealStatus = 'intact' | 'broken' | 'missing'
+export type GrnDocumentKind = 'challan' | 'invoice' | 'seal_photo' | 'damage_photo' | 'other'
 
 type Timestamps = { created_at: string; updated_at: string }
 
@@ -411,6 +416,7 @@ export interface Database {
           product_id: string | null
           bin_id: string | null
           order_id: string | null
+          grn_id: string | null
           title: string
           message: string
           metadata: Json
@@ -444,6 +450,13 @@ export interface Database {
             columns: ['order_id']
             isOneToOne: false
             referencedRelation: 'orders'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'alerts_grn_id_fkey'
+            columns: ['grn_id']
+            isOneToOne: false
+            referencedRelation: 'grns'
             referencedColumns: ['id']
           },
         ]
@@ -569,6 +582,271 @@ export interface Database {
         Insert: never
         Update: never
         Relationships: []
+      }
+      vendors: {
+        Row: {
+          id: string
+          code: string
+          name: string
+          contact: string | null
+          email: string | null
+          phone: string | null
+          is_active: boolean
+          created_by: string | null
+        } & Timestamps
+        Insert: { id?: string; code: string; name: string; contact?: string | null; email?: string | null; phone?: string | null; is_active?: boolean }
+        Update: { code?: string; name?: string; contact?: string | null; email?: string | null; phone?: string | null; is_active?: boolean }
+        Relationships: []
+      }
+      purchase_orders: {
+        Row: {
+          id: string
+          po_number: string
+          vendor_id: string
+          warehouse_id: string
+          status: PoStatus
+          expected_date: string | null
+          note: string | null
+          created_by: string | null
+          closed_at: string | null
+        } & Timestamps
+        Insert: never // created by create_purchase_order()
+        Update: { status?: PoStatus; expected_date?: string | null; note?: string | null }
+        Relationships: [
+          {
+            foreignKeyName: 'purchase_orders_vendor_id_fkey'
+            columns: ['vendor_id']
+            isOneToOne: false
+            referencedRelation: 'vendors'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'purchase_orders_warehouse_id_fkey'
+            columns: ['warehouse_id']
+            isOneToOne: false
+            referencedRelation: 'warehouses'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      purchase_order_lines: {
+        Row: {
+          id: string
+          po_id: string
+          product_id: string
+          ordered_qty: number
+          received_qty: number
+          accepted_qty: number
+          unit_cost: number
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'purchase_order_lines_po_id_fkey'
+            columns: ['po_id']
+            isOneToOne: false
+            referencedRelation: 'purchase_orders'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'purchase_order_lines_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      grns: {
+        Row: {
+          id: string
+          grn_number: string
+          po_id: string
+          vendor_id: string
+          warehouse_id: string
+          status: GrnStatus
+          vehicle_number: string
+          driver_name: string
+          driver_id: string | null
+          arrived_at: string
+          gate_entry_no: string | null
+          seal_number: string | null
+          seal_status: SealStatus
+          challan_number: string | null
+          invoice_number: string | null
+          shipment_id: string | null
+          received_by: string | null
+          received_at: string
+          verified_by: string | null
+          verified_at: string | null
+          completed_at: string | null
+          has_discrepancy: boolean
+          discrepancy_summary: Json
+          discrepancy_resolved_by: string | null
+          discrepancy_resolved_at: string | null
+          discrepancy_note: string | null
+          note: string | null
+          cancelled_at: string | null
+          cancel_reason: string | null
+        } & Timestamps
+        Insert: never // created by create_grn()
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'grns_po_id_fkey'
+            columns: ['po_id']
+            isOneToOne: false
+            referencedRelation: 'purchase_orders'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'grns_vendor_id_fkey'
+            columns: ['vendor_id']
+            isOneToOne: false
+            referencedRelation: 'vendors'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'grns_warehouse_id_fkey'
+            columns: ['warehouse_id']
+            isOneToOne: false
+            referencedRelation: 'warehouses'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'grns_received_by_fkey'
+            columns: ['received_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      grn_lines: {
+        Row: {
+          id: string
+          grn_id: string
+          po_line_id: string
+          product_id: string
+          ordered_qty: number
+          previously_received_qty: number
+          received_qty: number
+          accepted_qty: number
+          damaged_qty: number
+          rejected_qty: number
+          put_away_qty: number
+          short_qty: number
+          excess_qty: number
+          lot_number: string | null
+          expiry_date: string | null
+          damage_note: string | null
+          counted_by: string | null
+          counted_at: string | null
+        } & Timestamps
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'grn_lines_grn_id_fkey'
+            columns: ['grn_id']
+            isOneToOne: false
+            referencedRelation: 'grns'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'grn_lines_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      grn_putaways: {
+        Row: {
+          id: string
+          grn_id: string
+          grn_line_id: string
+          bin_id: string
+          quantity: number
+          movement_id: string | null
+          performed_by: string | null
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'grn_putaways_grn_id_fkey'
+            columns: ['grn_id']
+            isOneToOne: false
+            referencedRelation: 'grns'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'grn_putaways_bin_id_fkey'
+            columns: ['bin_id']
+            isOneToOne: false
+            referencedRelation: 'bins'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      grn_documents: {
+        Row: {
+          id: string
+          grn_id: string
+          kind: GrnDocumentKind
+          storage_path: string
+          file_name: string | null
+          content_type: string | null
+          size_bytes: number | null
+          uploaded_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          grn_id: string
+          kind: GrnDocumentKind
+          storage_path: string
+          file_name?: string | null
+          content_type?: string | null
+          size_bytes?: number | null
+          uploaded_by: string
+        }
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'grn_documents_grn_id_fkey'
+            columns: ['grn_id']
+            isOneToOne: false
+            referencedRelation: 'grns'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      grn_events: {
+        Row: {
+          id: number
+          grn_id: string
+          actor_id: string | null
+          event: string
+          detail: Json
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'grn_events_grn_id_fkey'
+            columns: ['grn_id']
+            isOneToOne: false
+            referencedRelation: 'grns'
+            referencedColumns: ['id']
+          },
+        ]
       }
     }
     Views: {
@@ -807,6 +1085,37 @@ export interface Database {
       }
       dashboard_kpis: { Args: Record<string, never>; Returns: Json }
       export_rows: { Args: { p_view: string }; Returns: Json[] }
+      create_vendor: {
+        Args: { p_name: string; p_code?: string | null; p_contact?: string | null; p_email?: string | null; p_phone?: string | null }
+        Returns: Database['public']['Tables']['vendors']['Row']
+      }
+      create_purchase_order: { Args: { p_po: Json }; Returns: Json }
+      get_purchase_order: { Args: { p_po_id: string }; Returns: Json }
+      close_purchase_order: {
+        Args: { p_po_id: string }
+        Returns: Database['public']['Tables']['purchase_orders']['Row']
+      }
+      get_grn: { Args: { p_grn_id: string }; Returns: Json }
+      create_grn: { Args: { p: Json }; Returns: Json }
+      record_grn_line: {
+        Args: {
+          p_grn_id: string
+          p_code: string
+          p_received: number
+          p_accepted: number
+          p_damaged?: number
+          p_rejected?: number
+          p_lot_number?: string | null
+          p_expiry_date?: string | null
+          p_damage_note?: string | null
+        }
+        Returns: Json
+      }
+      verify_grn: { Args: { p_grn_id: string }; Returns: Json }
+      putaway_grn_line: { Args: { p_grn_line_id: string; p_bin_id: string; p_qty: number }; Returns: Json }
+      resolve_grn_discrepancy: { Args: { p_grn_id: string; p_note: string }; Returns: Json }
+      cancel_grn: { Args: { p_grn_id: string; p_reason?: string | null }; Returns: Json }
+      grn_dashboard: { Args: Record<string, never>; Returns: Json }
     }
     Enums: {
       app_role: AppRole
@@ -820,6 +1129,10 @@ export interface Database {
       import_kind: ImportKind
       import_status: ImportStatus
       count_status: CountStatus
+      po_status: PoStatus
+      grn_status: GrnStatus
+      seal_status: SealStatus
+      grn_document_kind: GrnDocumentKind
     }
     CompositeTypes: Record<string, never>
   }
