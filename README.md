@@ -134,6 +134,28 @@ supabase functions deploy csv-import alert-digest label-pdf order-webhook
 `alert-digest` no-ops without `RESEND_API_KEY`, and `order-webhook` returns 503 without
 `ORDER_WEBHOOK_SECRET`, so neither blocks local development.
 
+### 4.4b Deploying the frontend to Vercel
+`vercel.json` at the repo root builds `web/` and serves it as an SPA, so the project
+deploys from the root with no dashboard configuration (alternatively set **Root
+Directory** to `web` and delete the file).
+
+Set these in **Settings → Environment Variables** for every environment you deploy:
+
+| Variable | Value |
+|---|---|
+| `VITE_SUPABASE_URL` | your project base URL, e.g. `https://<ref>.supabase.co` — **not** a `/rest/v1/` path |
+| `VITE_SUPABASE_ANON_KEY` | the anon key (safe in the browser; every table is RLS-protected) |
+
+`web/.env.local` is git-ignored, so it never reaches Vercel — without those two
+variables the build now fails with an explicit message rather than deploying a
+bundle that white-screens. `vite.config.ts` also rejects a URL that carries a
+service path, which is the easiest mistake to make when copying from the Supabase
+dashboard.
+
+Only `VITE_*` variables are exposed to the browser. The service-role key, the
+Resend key and the webhook secret belong to the Edge Functions
+(`supabase secrets set`), never to the frontend.
+
 ### 4.5 Checks
 ```bash
 cd web
