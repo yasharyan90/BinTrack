@@ -221,7 +221,7 @@ Every route in `docs/03-APP-FLOW.md` is implemented.
 
 | Route | Who | What it does |
 |---|---|---|
-| `/login`, `/signup`, `/forgot-password` | anyone | Password or magic-link sign in; new accounts start as staff. |
+| `/login`, `/signup`, `/forgot-password` | anyone | `/login` opens as a landing view over the warehouse photograph (`web/public/images/`); **Log in** blurs it and brings the form forward. A guard redirect or `?form` skips straight to the form. Password or magic-link sign in; new accounts start as staff. |
 | `/` | staff, admin | Quick actions, orders waiting to be picked, recent movements. |
 | `/search` | staff, admin | Typo-tolerant search with every location, quantity and expiry. |
 | `/products/:id` | staff, admin | KPI strip, locations table (FEFO order), movement history, admin adjustments. |

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { useAuth } from '@/stores/auth'
 
 /**
@@ -92,11 +93,25 @@ describe('app composition', () => {
     useAuth.setState({ initialise: () => () => {} })
   })
 
-  it('renders the sign-in page for a visitor', async () => {
+  it('opens as a landing view, and Log in reveals the form', async () => {
     await renderApp('/login')
+    expect(
+      await screen.findByRole('heading', { name: 'Every item has an address.' }),
+    ).toBeInTheDocument()
+    // The form is not on screen until asked for.
+    expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument()
+
+    // Two entry points carry the same name: the header and the hero button.
+    await userEvent.click(screen.getAllByRole('button', { name: /^log in$/i })[0])
+
     expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
+  })
+
+  it('goes straight to the form for a visitor bounced by a guard', async () => {
+    await renderApp('/login?form')
+    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
   })
 
   it('sends an unauthenticated visitor away from an admin route', async () => {

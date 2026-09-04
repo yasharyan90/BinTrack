@@ -17,6 +17,9 @@ export const SEED_USERS = {
 export async function signIn(page: Page, who: keyof typeof SEED_USERS) {
   const user = SEED_USERS[who]
   await page.goto('/login')
+  // /login opens as a landing view; the form is behind the Log in button.
+  const landing = page.getByRole('button', { name: /^log in$/i }).first()
+  if (await landing.isVisible().catch(() => false)) await landing.click()
   await page.getByLabel('Email').fill(user.email)
   await page.getByLabel('Password').fill(user.password)
   await page.getByRole('button', { name: 'Sign in' }).click()
