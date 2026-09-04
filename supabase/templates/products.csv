@@ -1,0 +1,3 @@
+sku,name,description,category,barcode,unit,unit_cost,reorder_point,reorder_qty,is_perishable,shelf_life_days
+MUG-0042,Blue Ceramic Mug 350ml,Stoneware mug,Kitchen,8900000000426,pcs,120.00,40,100,false,
+OAT-0007,Oat Milk 1L,Barista oat drink,Beverages,8900000000075,pcs,95.00,30,120,true,120

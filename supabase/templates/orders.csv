@@ -1,0 +1,4 @@
+order_number,customer_name,sku,quantity
+SHOP-1001,Acme Retail,MUG-0042,4
+SHOP-1001,Acme Retail,OAT-0007,2
+SHOP-1002,Nimbus Cafe,OAT-0007,12

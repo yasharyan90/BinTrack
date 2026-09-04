@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web — lint, types, unit tests, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc -p tsconfig.app.json --noEmit
+
+      - name: Unit and component tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # The build only needs these to exist; nothing is contacted.
+          VITE_SUPABASE_URL: http://127.0.0.1:54321
+          VITE_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist
+          retention-days: 7
+
+  database:
+    name: Database — migration, seed, pgTAP
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase
+        run: supabase start
+
+      - name: Apply migrations and seed
+        run: supabase db reset --no-seed=false
+
+      - name: Lint the schema
+        run: supabase db lint --level warning
+
+      - name: Run pgTAP suite
+        run: supabase test db
+
+      - name: Confirm the seed produced the documented data
+        run: |
+          supabase db execute --file /dev/stdin <<'SQL'
+          do $$
+          declare
+            v_products integer; v_bins integer; v_alerts integer;
+          begin
+            select count(*) into v_products from public.products;
+            select count(*) into v_bins     from public.bins;
+            select count(*) into v_alerts   from public.alerts;
+            if v_products <> 800 then raise exception 'expected 800 products, found %', v_products; end if;
+            if v_bins     <> 160 then raise exception 'expected 160 bins, found %', v_bins; end if;
+            if v_alerts   = 0    then raise exception 'the alert engine produced nothing'; end if;
+            -- Invariants that must hold for any seed (TRD §3).
+            if exists (select 1 from public.stock_levels where reserved_qty > quantity) then
+              raise exception 'reserved exceeds on hand';
+            end if;
+            if exists (select 1 from public.stock_levels
+                        where status = 'available' and expiry_date < current_date) then
+              raise exception 'an expired lot is still allocatable';
+            end if;
+            raise notice 'seed verified: % products, % bins, % alerts', v_products, v_bins, v_alerts;
+          end $$;
+          SQL
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+
+  functions:
+    name: Edge Functions — Deno checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Typecheck the functions
+        run: |
+          for fn in csv-import alert-digest label-pdf order-webhook; do
+            echo "→ $fn"
+            deno check "supabase/functions/$fn/index.ts"
+          done
+
+      - name: Unit tests
+        run: deno test --allow-env supabase/functions/tests/
+
+      - name: Format check
+        run: deno fmt --check supabase/functions/ || true

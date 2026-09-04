@@ -1,0 +1,3 @@
+warehouse_code,row_code,row_name,bin_code,capacity
+WH1,R01,Row 1,B001,300
+WH1,R01,Row 1,B002,300

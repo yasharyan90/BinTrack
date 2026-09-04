@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------
+   Design tokens — UI/UX doc §2. Light is the base; .dark swaps values
+   only, so both themes share one layout and one component tree.
+   --------------------------------------------------------------------- */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
+    --primary: 240 6% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 240 5% 45%;
+    --success: 142 70% 35%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 40%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 72% 46%;
+    --destructive-foreground: 0 0% 100%;
+    --info: 217 80% 45%;
+    --info-foreground: 0 0% 100%;
+    --reserved: 262 60% 50%;
+    --shadow: 240 10% 4%;
+    color-scheme: light;
+  }
+
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 6% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 6% 8%;
+    --popover-foreground: 0 0% 98%;
+    --muted: 240 4% 12%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 4% 14%;
+    --accent-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 6% 10%;
+    --secondary: 240 4% 14%;
+    --secondary-foreground: 0 0% 98%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 240 5% 65%;
+    --success: 142 60% 48%;
+    --success-foreground: 240 10% 4%;
+    --warning: 38 90% 58%;
+    --warning-foreground: 240 10% 4%;
+    --destructive: 0 70% 60%;
+    --destructive-foreground: 240 10% 4%;
+    --info: 217 85% 65%;
+    --info-foreground: 240 10% 4%;
+    --reserved: 262 65% 70%;
+    --shadow: 0 0% 0%;
+    color-scheme: dark;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  /* Focus is always visible — 2 px ring, offset 2 px (UI/UX §8). */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Quantities and KPIs line up in columns. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* The bin code is the hero of every screen (UI/UX §1). */
+  .location-code {
+    @apply font-mono font-semibold tracking-tight tabular;
+  }
+
+  .kpi-value {
+    @apply text-[28px] font-semibold leading-8 tabular;
+  }
+
+  .label-small {
+    @apply text-small font-medium uppercase tracking-[0.04em] text-muted-foreground;
+  }
+
+  .card-flat {
+    @apply rounded-lg border border-border bg-card;
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded-md bg-muted;
+  }
+
+  /* Wide tables scroll inside themselves; the page never scrolls sideways. */
+  .table-scroll {
+    @apply w-full overflow-x-auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
