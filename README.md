@@ -139,6 +139,10 @@ supabase functions deploy csv-import alert-digest label-pdf order-webhook
 deploys from the root with no dashboard configuration (alternatively set **Root
 Directory** to `web` and delete the file).
 
+Note that Vercel validates this file with `additionalProperties: false` — it rejects
+any key it does not recognise, including JSON-comment tricks like `"// note"`. Keep
+explanations here rather than in the config.
+
 Set these in **Settings → Environment Variables** for every environment you deploy:
 
 | Variable | Value |

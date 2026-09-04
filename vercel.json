@@ -1,15 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-
-  "// note": "The app lives in web/. These explicit commands let the project deploy from the repo root with no dashboard configuration; alternatively set Root Directory to 'web' in Vercel and delete this file.",
-
   "installCommand": "npm --prefix web ci",
   "buildCommand": "npm --prefix web run build",
   "outputDirectory": "web/dist",
   "framework": null,
-
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
-
   "headers": [
     {
       "source": "/assets/(.*)",
