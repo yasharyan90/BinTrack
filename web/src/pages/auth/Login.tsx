@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Bell, Mail, ScanLine, Search } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Bell, Info, Mail, ScanLine, Search } from 'lucide-react'
 import { AuthCard, AuthFrame } from './AuthLayout'
+import { AboutDialog } from './AboutDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field } from '@/components/ui/label'
@@ -45,6 +46,7 @@ export default function Login() {
     from || params.has('form') ? 'form' : 'landing',
   )
 
+  const [aboutOpen, setAboutOpen] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -91,22 +93,34 @@ export default function Login() {
     <AuthFrame
       blurred={mode === 'form'}
       headerAction={
-        mode === 'landing' ? (
-          <Button variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={openForm}>
-            Log in
-          </Button>
-        ) : (
+        <>
           <Button
             variant="ghost"
             className="text-white hover:bg-white/15 hover:text-white"
-            onClick={() => setMode('landing')}
+            onClick={() => setAboutOpen(true)}
           >
-            <ArrowLeft />
-            Back
+            <Info />
+            About
           </Button>
-        )
+          {mode === 'landing' ? (
+            <Button variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={openForm}>
+              Log in
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              className="text-white hover:bg-white/15 hover:text-white"
+              onClick={() => setMode('landing')}
+            >
+              <ArrowLeft />
+              Back
+            </Button>
+          )}
+        </>
       }
     >
+      <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+
       {mode === 'landing' ? (
         <main className="flex flex-1 items-center px-4 py-10 sm:px-8 lg:px-16">
           <div className="max-w-2xl space-y-8 text-white animate-in fade-in-0 slide-in-from-bottom-2 duration-500">

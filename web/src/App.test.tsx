@@ -109,6 +109,20 @@ describe('app composition', () => {
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
   })
 
+  it('About, beside Log in, explains the project and its flow', async () => {
+    await renderApp('/login')
+    await screen.findByRole('heading', { name: 'Every item has an address.' })
+
+    await userEvent.click(screen.getByRole('button', { name: /^about$/i }))
+
+    expect(await screen.findByRole('heading', { name: 'About BinTrack' })).toBeInTheDocument()
+    // The five-step flow, in order.
+    for (const step of ['Receive', 'Search', 'Order', 'Pick', 'Watch']) {
+      expect(screen.getByText(step, { selector: 'p' })).toBeInTheDocument()
+    }
+    expect(screen.getByText('WH1-R02-B017')).toBeInTheDocument()
+  })
+
   it('goes straight to the form for a visitor bounced by a guard', async () => {
     await renderApp('/login?form')
     expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
