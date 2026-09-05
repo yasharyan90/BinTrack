@@ -5,7 +5,14 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SkeletonRows } from '@/components/ui/skeleton'
 import { GrnStatusChip, SealChip } from '@/components/grn/GrnStatus'
@@ -17,12 +24,36 @@ import { useAuth } from '@/stores/auth'
 import { cn, formatDateTime } from '@/lib/utils'
 
 const FILTERS: { value: NonNullable<GrnListFilters['status']>; label: string; tone: string }[] = [
-  { value: 'open', label: 'In progress', tone: 'data-[active=true]:bg-sky-500 data-[active=true]:text-white' },
-  { value: 'verifying', label: 'Pending verification', tone: 'data-[active=true]:bg-amber-500 data-[active=true]:text-white' },
-  { value: 'put_away', label: 'Pending put-away', tone: 'data-[active=true]:bg-violet-500 data-[active=true]:text-white' },
-  { value: 'discrepancy', label: 'Discrepancies', tone: 'data-[active=true]:bg-rose-500 data-[active=true]:text-white' },
-  { value: 'completed', label: 'Completed', tone: 'data-[active=true]:bg-emerald-500 data-[active=true]:text-white' },
-  { value: 'all', label: 'All', tone: 'data-[active=true]:bg-foreground data-[active=true]:text-background' },
+  {
+    value: 'open',
+    label: 'In progress',
+    tone: 'data-[active=true]:bg-info data-[active=true]:text-info-foreground',
+  },
+  {
+    value: 'verifying',
+    label: 'Pending verification',
+    tone: 'data-[active=true]:bg-warning data-[active=true]:text-warning-foreground',
+  },
+  {
+    value: 'put_away',
+    label: 'Pending put-away',
+    tone: 'data-[active=true]:bg-reserved data-[active=true]:text-reserved-foreground',
+  },
+  {
+    value: 'discrepancy',
+    label: 'Discrepancies',
+    tone: 'data-[active=true]:bg-destructive data-[active=true]:text-destructive-foreground',
+  },
+  {
+    value: 'completed',
+    label: 'Completed',
+    tone: 'data-[active=true]:bg-success data-[active=true]:text-success-foreground',
+  },
+  {
+    value: 'all',
+    label: 'All',
+    tone: 'data-[active=true]:bg-foreground data-[active=true]:text-background',
+  },
 ]
 
 /** Every truck that has arrived, with the admin's five figures on top. */
@@ -37,9 +68,12 @@ export default function GrnList() {
   // 'verifying' as a filter means "still needs counting" — arrived trucks too.
   const listStatus: GrnListFilters['status'] = status === 'verifying' ? 'open' : status
   const { data: rows = [], isLoading } = useGrns({ status: listStatus, search: debounced })
-  const visible = status === 'verifying' ? rows.filter((r) => r.status === 'arrived' || r.status === 'verifying')
-    : status === 'put_away' ? rows.filter((r) => r.status === 'verified' || r.status === 'put_away')
-    : rows
+  const visible =
+    status === 'verifying'
+      ? rows.filter((r) => r.status === 'arrived' || r.status === 'verifying')
+      : status === 'put_away'
+        ? rows.filter((r) => r.status === 'verified' || r.status === 'put_away')
+        : rows
 
   useRealtime('grns', ['grns'])
 
@@ -49,7 +83,7 @@ export default function GrnList() {
         title="Goods receipts"
         description="Every truck, from the gate to the bin. PO → seal → count → GRN → put-away."
         actions={
-          <Button asChild className="bg-sky-600 text-white hover:bg-sky-600/90">
+          <Button asChild className="bg-info text-info-foreground hover:bg-info/90">
             <Link to="/grn/new">
               <Plus />
               Register arrival
@@ -87,7 +121,10 @@ export default function GrnList() {
           ))}
         </div>
         <div className="relative min-w-56 flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -129,28 +166,43 @@ export default function GrnList() {
               {visible.map((grn) => (
                 <TableRow key={grn.id}>
                   <TableCell>
-                    <Link to={`/grn/${grn.id}`} className="font-mono text-sm font-medium underline-offset-2 hover:underline">
+                    <Link
+                      to={`/grn/${grn.id}`}
+                      className="font-mono text-sm font-medium underline-offset-2 hover:underline"
+                    >
                       {grn.grn_number}
                     </Link>
                     {grn.has_discrepancy && !grn.discrepancy_resolved_at && (
-                      <span className="ml-2 inline-flex items-center gap-1 text-small text-rose-600 dark:text-rose-300">
+                      <span className="ml-2 inline-flex items-center gap-1 text-small text-destructive">
                         <AlertTriangle className="size-3" aria-hidden />
                         discrepancy
                       </span>
                     )}
                   </TableCell>
-                  <TableCell><GrnStatusChip status={grn.status} /></TableCell>
+                  <TableCell>
+                    <GrnStatusChip status={grn.status} />
+                  </TableCell>
                   <TableCell>
                     <span className="block font-mono text-small">{grn.po?.po_number}</span>
-                    <span className="block truncate text-small text-muted-foreground">{grn.vendor?.name}</span>
+                    <span className="block truncate text-small text-muted-foreground">
+                      {grn.vendor?.name}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <span className="block font-mono text-small">{grn.vehicle_number}</span>
-                    <span className="block truncate text-small text-muted-foreground">{grn.driver_name}</span>
+                    <span className="block truncate text-small text-muted-foreground">
+                      {grn.driver_name}
+                    </span>
                   </TableCell>
-                  <TableCell><SealChip status={grn.seal_status} /></TableCell>
-                  <TableCell className="text-muted-foreground">{grn.receiver?.full_name ?? '—'}</TableCell>
-                  <TableCell className="whitespace-nowrap text-muted-foreground">{formatDateTime(grn.arrived_at)}</TableCell>
+                  <TableCell>
+                    <SealChip status={grn.seal_status} />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {grn.receiver?.full_name ?? '—'}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-muted-foreground">
+                    {formatDateTime(grn.arrived_at)}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

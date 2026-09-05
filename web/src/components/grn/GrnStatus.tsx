@@ -3,7 +3,8 @@ import { cn } from '@/lib/utils'
 import type { GrnStatus, PoStatus, SealStatus } from '@/types/database'
 import { GRN_STATUS, PO_STATUS, SEAL } from './statusMeta'
 
-const chipBase = 'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-small font-medium'
+const chipBase =
+  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-small font-medium'
 
 export function GrnStatusChip({ status, className }: { status: GrnStatus; className?: string }) {
   const { label, chip, icon: Icon } = GRN_STATUS[status]
@@ -36,7 +37,7 @@ const STEPS: GrnStatus[] = ['arrived', 'verifying', 'verified', 'put_away', 'com
 export function GrnStepper({ status }: { status: GrnStatus }) {
   if (status === 'cancelled') {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-neutral-500/30 bg-neutral-500/10 px-3 py-2 text-sm">
+      <div className="flex items-center gap-2 rounded-lg border border-muted-foreground/30 bg-muted-foreground/10 px-3 py-2 text-sm">
         <Ban className="size-4" aria-hidden />
         This GRN was cancelled. No stock entered inventory.
       </div>
@@ -54,20 +55,37 @@ export function GrnStepper({ status }: { status: GrnStatus }) {
           <li key={step} className="flex flex-1 items-center gap-1.5">
             <span
               className={cn(
-                'flex size-7 shrink-0 items-center justify-center rounded-full border text-white transition-colors',
-                done || active ? cn(tone.dot, 'border-transparent') : 'border-border bg-muted text-muted-foreground',
+                'flex size-7 shrink-0 items-center justify-center rounded-full border transition-colors',
+                done || active
+                  ? cn(tone.dot, tone.dotFg, 'border-transparent')
+                  : 'border-border bg-muted text-muted-foreground',
                 active && 'ring-2 ring-offset-2 ring-offset-background',
                 active && tone.dot.replace('bg-', 'ring-'),
               )}
               aria-current={active ? 'step' : undefined}
             >
-              {done ? <Check className="size-3.5" aria-hidden /> : <Icon className="size-3.5" aria-hidden />}
+              {done ? (
+                <Check className="size-3.5" aria-hidden />
+              ) : (
+                <Icon className="size-3.5" aria-hidden />
+              )}
             </span>
-            <span className={cn('hidden truncate text-small sm:block', active ? 'font-semibold' : 'text-muted-foreground')}>
+            <span
+              className={cn(
+                'hidden truncate text-small sm:block',
+                active ? 'font-semibold' : 'text-muted-foreground',
+              )}
+            >
               {tone.label}
             </span>
             {index < STEPS.length - 1 && (
-              <span className={cn('h-0.5 flex-1 rounded-full', index < current ? tone.dot : 'bg-border')} aria-hidden />
+              <span
+                className={cn(
+                  'h-0.5 flex-1 rounded-full',
+                  index < current ? tone.dot : 'bg-border',
+                )}
+                aria-hidden
+              />
             )}
           </li>
         )

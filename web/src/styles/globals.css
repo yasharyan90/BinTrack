@@ -3,68 +3,83 @@
 @tailwind utilities;
 
 /* ---------------------------------------------------------------------
-   Design tokens — UI/UX doc §2. Light is the base; .dark swaps values
-   only, so both themes share one layout and one component tree.
+   Design tokens — derived from DESIGN.md (Binance design analysis).
+
+   One accent: Binance Yellow (#fcd535) carries every primary action; black
+   text on yellow is the signature and is never inverted. Dark is the default
+   canvas (#0b0e11, never pure black); light is the transactional canvas. The
+   two themes share the yellow, the info-blue focus ring and the trading
+   green / red, and differ only in canvas, surface and text tones.
+
+   Values are HSL triplets so Tailwind can apply alpha (`bg-primary/15`).
    --------------------------------------------------------------------- */
 @layer base {
+  /* Light — transactional canvas. */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 4%;
+    --background: 0 0% 100%; /* canvas-light        #ffffff */
+    --foreground: 225 14% 11%; /* ink                 #181a20 */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 4%;
+    --card-foreground: 225 14% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 4%;
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 46%;
-    --accent: 240 5% 96%;
-    --accent-foreground: 240 6% 10%;
-    --primary: 240 6% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 5% 96%;
-    --secondary-foreground: 240 6% 10%;
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
-    --ring: 240 5% 45%;
-    --success: 142 70% 35%;
+    --popover-foreground: 225 14% 11%;
+    --muted: 0 0% 96%; /* surface-strong-light #f5f5f5 */
+    --muted-foreground: 214 10% 49%; /* muted               #707a8a */
+    --accent: 0 0% 98%; /* surface-soft-light  #fafafa */
+    --accent-foreground: 225 14% 11%;
+    --primary: 48 97% 60%; /* Binance Yellow      #fcd535 */
+    --primary-active: 46 92% 49%; /* yellow pressed      #f0b90b */
+    --primary-foreground: 225 14% 11%; /* on-primary          #181a20 */
+    --secondary: 0 0% 100%; /* button-secondary-on-light */
+    --secondary-foreground: 225 14% 11%;
+    --border: 216 11% 93%; /* hairline-on-light   #eaecef */
+    --input: 216 11% 93%;
+    --ring: 217 91% 60%; /* info-ring           #3b82f6 */
+    /* Trading green / red deepened slightly on white so text meets 4.5:1;
+       the dark theme uses Binance's exact values. */
+    --success: 157 87% 34%; /* from trading-up     #0ecb81 */
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 40%;
+    --warning: 46 92% 40%; /* from primary-active #f0b90b */
     --warning-foreground: 0 0% 100%;
-    --destructive: 0 72% 46%;
+    --destructive: 352 84% 52%; /* from trading-down   #f6465d */
     --destructive-foreground: 0 0% 100%;
-    --info: 217 80% 45%;
+    --info: 217 91% 50%; /* info                #3b82f6 */
     --info-foreground: 0 0% 100%;
-    --reserved: 262 60% 50%;
-    --shadow: 240 10% 4%;
+    --reserved: 177 62% 40%; /* accent-turquoise    #2dbdb6 */
+    --reserved-foreground: 0 0% 100%;
+    --shadow: 225 14% 11%;
     color-scheme: light;
   }
 
+  /* Dark — the default canvas. */
   .dark {
-    --background: 240 10% 4%;
-    --foreground: 0 0% 98%;
-    --card: 240 6% 7%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 6% 8%;
-    --popover-foreground: 0 0% 98%;
-    --muted: 240 4% 12%;
-    --muted-foreground: 240 5% 65%;
-    --accent: 240 4% 14%;
-    --accent-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 6% 10%;
-    --secondary: 240 4% 14%;
-    --secondary-foreground: 0 0% 98%;
-    --border: 240 4% 16%;
-    --input: 240 4% 16%;
-    --ring: 240 5% 65%;
-    --success: 142 60% 48%;
-    --success-foreground: 240 10% 4%;
-    --warning: 38 90% 58%;
-    --warning-foreground: 240 10% 4%;
-    --destructive: 0 70% 60%;
-    --destructive-foreground: 240 10% 4%;
-    --info: 217 85% 65%;
-    --info-foreground: 240 10% 4%;
-    --reserved: 262 65% 70%;
+    --background: 210 21% 5%; /* canvas-dark         #0b0e11 */
+    --foreground: 216 11% 93%; /* body                #eaecef */
+    --card: 213 15% 14%; /* surface-card-dark   #1e2329 */
+    --card-foreground: 216 11% 93%;
+    --popover: 213 15% 14%;
+    --popover-foreground: 216 11% 93%;
+    --muted: 214 14% 20%; /* surface-elevated    #2b3139 */
+    --muted-foreground: 213 10% 61%; /* muted-strong        #929aa5 */
+    --accent: 214 14% 20%;
+    --accent-foreground: 0 0% 100%;
+    --primary: 48 97% 60%; /* the same yellow     #fcd535 */
+    --primary-active: 46 92% 49%;
+    --primary-foreground: 225 14% 11%; /* black on yellow — never inverted */
+    --secondary: 213 15% 14%; /* button-secondary-on-dark */
+    --secondary-foreground: 0 0% 100%;
+    --border: 214 14% 20%; /* hairline-on-dark = elevated surface */
+    --input: 214 14% 20%;
+    --ring: 217 91% 60%;
+    --success: 156 87% 43%; /* trading-up          #0ecb81 */
+    --success-foreground: 225 14% 11%;
+    --warning: 46 92% 49%; /* primary-active      #f0b90b */
+    --warning-foreground: 225 14% 11%;
+    --destructive: 352 91% 62%; /* trading-down        #f6465d */
+    --destructive-foreground: 0 0% 100%;
+    --info: 217 91% 60%; /* info                #3b82f6 */
+    --info-foreground: 0 0% 100%;
+    --reserved: 177 62% 46%; /* accent-turquoise    #2dbdb6 */
+    --reserved-foreground: 225 14% 11%;
     --shadow: 0 0% 0%;
     color-scheme: dark;
   }
@@ -79,35 +94,44 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 14px; /* body-md */
+    line-height: 1.5;
   }
 
-  /* Focus is always visible — 2 px ring, offset 2 px (UI/UX §8). */
+  /* Focus: 2 px info-blue ring at half alpha, no offset (DESIGN.md elevation). */
   :focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply outline-none ring-2 ring-ring/50;
   }
 
-  /* Quantities and KPIs line up in columns. */
+  /* Numbers render in the "Plex" voice: IBM Plex Sans stands in for
+     BinancePlex — tabular, medium weight, on prices and quantities alike. */
   .tabular {
+    font-family: 'IBM Plex Sans', 'Inter', system-ui, sans-serif;
     font-variant-numeric: tabular-nums;
+    font-weight: 500;
   }
 }
 
 @layer components {
-  /* The bin code is the hero of every screen (UI/UX §1). */
+  /* The bin code is the hero of every screen — a code, so it stays mono. */
   .location-code {
-    @apply font-mono font-semibold tracking-tight tabular;
+    @apply font-mono font-semibold tracking-tight;
+    font-variant-numeric: tabular-nums;
   }
 
+  /* number-display: BinancePlex 700, tight leading. */
   .kpi-value {
-    @apply text-[28px] font-semibold leading-8 tabular;
+    @apply tabular text-[28px] leading-8;
+    font-weight: 700;
+    letter-spacing: -0.3px;
   }
 
+  /* caption: 12px / 500 */
   .label-small {
     @apply text-small font-medium uppercase tracking-[0.04em] text-muted-foreground;
   }
 
+  /* Flat surfaces with hairline separation — no shadows. */
   .card-flat {
     @apply rounded-lg border border-border bg-card;
   }

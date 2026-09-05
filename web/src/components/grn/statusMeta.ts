@@ -1,75 +1,111 @@
-import { Ban, CheckCircle2, ClipboardCheck, PackageCheck, ShieldAlert, ShieldCheck, ShieldOff, Truck, Warehouse } from 'lucide-react'
+import {
+  Ban,
+  CheckCircle2,
+  ClipboardCheck,
+  PackageCheck,
+  ShieldAlert,
+  ShieldCheck,
+  ShieldOff,
+  Truck,
+  Warehouse,
+} from 'lucide-react'
 import type { GrnStatus, PoStatus, SealStatus } from '@/types/database'
 
 /**
- * The receiving module is the one place the design system's "calm by default"
- * rule bends: every stage of a truck's visit gets its own hue, so a wall of
- * receipts reads at a glance. Each pair is chosen to hold contrast in both
- * themes (tinted background, saturated text).
+ * Each stage of a truck's visit gets one of the palette's five hues, so a
+ * wall of receipts reads at a glance without a second brand colour:
+ * arrived blue → verifying yellow → verified turquoise → put-away green →
+ * completed ink. Tints are the hue at 15 % so both themes read the same.
  */
 export type Tone = {
   label: string
   chip: string
   dot: string
+  /** Text colour that sits on `dot` — black on yellow, never inverted. */
+  dotFg: string
   soft: string
   icon: typeof Truck
 }
 
 export const GRN_STATUS: Record<GrnStatus, Tone> = {
   arrived: {
+    dotFg: 'text-info-foreground',
     label: 'Arrived',
-    chip: 'bg-sky-500/15 text-sky-700 border-sky-500/30 dark:text-sky-300',
-    dot: 'bg-sky-500',
-    soft: 'from-sky-500/20 to-sky-500/5',
+    chip: 'bg-info/15 text-info border-info/30',
+    dot: 'bg-info',
+    soft: 'bg-card',
     icon: Truck,
   },
   verifying: {
+    dotFg: 'text-warning-foreground',
     label: 'Verifying',
-    chip: 'bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-300',
-    dot: 'bg-amber-500',
-    soft: 'from-amber-500/20 to-amber-500/5',
+    chip: 'bg-warning/15 text-warning border-warning/30',
+    dot: 'bg-warning',
+    soft: 'bg-card',
     icon: ClipboardCheck,
   },
   verified: {
+    dotFg: 'text-reserved-foreground',
     label: 'Verified',
-    chip: 'bg-violet-500/15 text-violet-700 border-violet-500/30 dark:text-violet-300',
-    dot: 'bg-violet-500',
-    soft: 'from-violet-500/20 to-violet-500/5',
+    chip: 'bg-reserved/15 text-reserved border-reserved/30',
+    dot: 'bg-reserved',
+    soft: 'bg-card',
     icon: PackageCheck,
   },
   put_away: {
+    dotFg: 'text-success-foreground',
     label: 'Put-away',
-    chip: 'bg-teal-500/15 text-teal-700 border-teal-500/30 dark:text-teal-300',
-    dot: 'bg-teal-500',
-    soft: 'from-teal-500/20 to-teal-500/5',
+    chip: 'bg-success/15 text-success border-success/30',
+    dot: 'bg-success',
+    soft: 'bg-card',
     icon: Warehouse,
   },
   completed: {
+    dotFg: 'text-background',
     label: 'Completed',
-    chip: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-300',
-    dot: 'bg-emerald-500',
-    soft: 'from-emerald-500/20 to-emerald-500/5',
+    chip: 'bg-foreground/15 text-foreground border-foreground/30',
+    dot: 'bg-foreground',
+    soft: 'bg-card',
     icon: CheckCircle2,
   },
   cancelled: {
+    dotFg: 'text-background',
     label: 'Cancelled',
-    chip: 'bg-neutral-500/15 text-neutral-600 border-neutral-500/30 dark:text-neutral-300',
-    dot: 'bg-neutral-500',
-    soft: 'from-neutral-500/20 to-neutral-500/5',
+    chip: 'bg-muted-foreground/15 text-muted-foreground border-muted-foreground/30',
+    dot: 'bg-muted-foreground',
+    soft: 'bg-card',
     icon: Ban,
   },
 }
 
 export const PO_STATUS: Record<PoStatus, { label: string; chip: string }> = {
-  open: { label: 'Open', chip: 'bg-sky-500/15 text-sky-700 border-sky-500/30 dark:text-sky-300' },
-  partially_received: { label: 'Partially received', chip: 'bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-300' },
-  received: { label: 'Received', chip: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-300' },
-  closed: { label: 'Closed', chip: 'bg-neutral-500/15 text-neutral-600 border-neutral-500/30 dark:text-neutral-300' },
-  cancelled: { label: 'Cancelled', chip: 'bg-rose-500/15 text-rose-700 border-rose-500/30 dark:text-rose-300' },
+  open: { label: 'Open', chip: 'bg-info/15 text-info border-info/30' },
+  partially_received: {
+    label: 'Partially received',
+    chip: 'bg-warning/15 text-warning border-warning/30',
+  },
+  received: { label: 'Received', chip: 'bg-success/15 text-success border-success/30' },
+  closed: { label: 'Closed', chip: 'bg-muted text-muted-foreground border-border' },
+  cancelled: {
+    label: 'Cancelled',
+    chip: 'bg-destructive/15 text-destructive border-destructive/30',
+  },
 }
 
 export const SEAL: Record<SealStatus, { label: string; chip: string; icon: typeof ShieldCheck }> = {
-  intact: { label: 'Seal intact', chip: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-300', icon: ShieldCheck },
-  broken: { label: 'Seal broken', chip: 'bg-rose-500/15 text-rose-700 border-rose-500/30 dark:text-rose-300', icon: ShieldAlert },
-  missing: { label: 'Seal missing', chip: 'bg-rose-500/15 text-rose-700 border-rose-500/30 dark:text-rose-300', icon: ShieldOff },
+  intact: {
+    label: 'Seal intact',
+    chip: 'bg-success/15 text-success border-success/30',
+    icon: ShieldCheck,
+  },
+  broken: {
+    label: 'Seal broken',
+    chip: 'bg-destructive/15 text-destructive border-destructive/30',
+    icon: ShieldAlert,
+  },
+  missing: {
+    label: 'Seal missing',
+    chip: 'bg-destructive/15 text-destructive border-destructive/30',
+    icon: ShieldOff,
+  },
 }

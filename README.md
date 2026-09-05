@@ -29,6 +29,7 @@
 | `web/` | The React 18 + Vite + TypeScript app — every screen in the app-flow document. |
 | `.github/workflows/ci.yml` | CI: lint, typecheck, unit tests, build, `supabase db lint`, pgTAP, Deno checks. |
 | `.env.example` | Environment variables for the app and the Edge Functions. |
+| `DESIGN.md` | The design system the UI tokens derive from (Binance analysis, via `getdesign`). Edit this, then mirror changes into `globals.css`. |
 
 ---
 

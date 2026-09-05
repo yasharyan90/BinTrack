@@ -104,7 +104,11 @@ export default function Login() {
             About
           </Button>
           {mode === 'landing' ? (
-            <Button variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={openForm}>
+            <Button
+              variant="ghost"
+              className="text-white hover:bg-white/15 hover:text-white"
+              onClick={openForm}
+            >
               Log in
             </Button>
           ) : (
@@ -127,21 +131,23 @@ export default function Login() {
           <div className="max-w-2xl space-y-8 text-white animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
             <div className="space-y-4">
               <LogoMark size="xl" className="shadow-[0_0_40px_-8px_rgba(46,224,160,0.6)]" />
-              <p className="label-small text-white/70">Multi-warehouse inventory &amp; location tracking</p>
+              <p className="label-small text-white/70">
+                Multi-warehouse inventory &amp; location tracking
+              </p>
               <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
                 Every item has an address.
               </h1>
               <p className="max-w-xl text-base text-white/85 sm:text-lg">
                 Orders land, and the picker already knows the row and bin. Every movement is
-                recorded, every pick is scanned, and every problem raises its hand before it
-                costs money.
+                recorded, every pick is scanned, and every problem raises its hand before it costs
+                money.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3">
               <Button
                 size="lg"
-                className="bg-white text-neutral-950 hover:bg-white/90"
+                className="bg-primary text-primary-foreground hover:bg-primary-active"
                 onClick={openForm}
               >
                 Log in
@@ -159,7 +165,10 @@ export default function Login() {
 
             <ul className="grid gap-4 sm:grid-cols-3">
               {PROOF_POINTS.map(({ icon: Icon, title, text }) => (
-                <li key={title} className="space-y-1.5 rounded-lg border border-white/15 bg-black/30 p-4 backdrop-blur-sm">
+                <li
+                  key={title}
+                  className="space-y-1.5 rounded-lg border border-white/15 bg-black/30 p-4 backdrop-blur-sm"
+                >
                   <Icon className="size-5 text-white/80" strokeWidth={1.75} aria-hidden />
                   <p className="text-h3 text-white">{title}</p>
                   <p className="text-small text-white/75">{text}</p>
@@ -208,7 +217,10 @@ export default function Login() {
               </Field>
 
               {error && (
-                <p className="rounded-md bg-destructive/12 px-3 py-2 text-sm text-destructive" role="alert">
+                <p
+                  className="rounded-md bg-destructive/12 px-3 py-2 text-sm text-destructive"
+                  role="alert"
+                >
                   {error}
                 </p>
               )}

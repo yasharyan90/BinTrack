@@ -5,6 +5,8 @@ Related: `03-APP-FLOW.md`
 
 ---
 
+> **Theme note (2026-09-05).** The token values below were replaced by the Binance-derived palette in the repo-root `DESIGN.md` (installed with `npx getdesign@latest add binance`). The *structure* here — tokens, components, layouts, accessibility rules — is unchanged; only the values in `web/src/styles/globals.css` and `web/tailwind.config.ts` differ. Dark (`#0b0e11`) is now the default canvas, Binance Yellow (`#fcd535`, black text) is the single primary accent, trading green/red carry success/destructive, and IBM Plex Sans renders numbers as the BinancePlex substitute.
+
 ## 1. Design principles
 
 1. **Location first.** The bin code is the hero of every screen. It is always the largest text on a pick card.

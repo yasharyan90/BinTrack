@@ -4,18 +4,21 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// Height 40 on desktop, 48 on touch — gloves need a target (UI/UX §5).
+// Height 40 on desktop (DESIGN.md button-primary), 48 on touch — gloves need a target.
 const buttonVariants = cva(
   'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
-        secondary: 'border border-border bg-background hover:bg-accent hover:text-accent-foreground',
+        // button-primary: yellow with black text, darkening to primary-active. Never inverted.
+        primary: 'bg-primary text-primary-foreground hover:bg-primary-active active:bg-primary-active',
+        // button-secondary: the card surface with a hairline, on either canvas.
+        secondary: 'border border-border bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
         success: 'bg-success text-success-foreground hover:bg-success/90',
-        link: 'text-foreground underline-offset-4 hover:underline',
+        // text-link: yellow, no underline by default.
+        link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
         sm: 'h-8 px-3 text-xs',

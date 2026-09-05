@@ -5,10 +5,11 @@ export type Theme = 'light' | 'dark' | 'system'
 
 const STORAGE_KEY = 'bt-theme'
 
+/** Dark is the default canvas (DESIGN.md); light and system are opt-in choices. */
 function readStored(): Theme {
-  if (typeof localStorage === 'undefined') return 'system'
+  if (typeof localStorage === 'undefined') return 'dark'
   const value = localStorage.getItem(STORAGE_KEY)
-  return value === 'light' || value === 'dark' ? value : 'system'
+  return value === 'light' || value === 'system' ? value : 'dark'
 }
 
 function prefersDark(): boolean {
