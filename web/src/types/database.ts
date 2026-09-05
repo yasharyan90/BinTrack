@@ -41,6 +41,8 @@ export type PoStatus = 'open' | 'partially_received' | 'received' | 'closed' | '
 export type GrnStatus = 'arrived' | 'verifying' | 'verified' | 'put_away' | 'completed' | 'cancelled'
 export type SealStatus = 'intact' | 'broken' | 'missing'
 export type GrnDocumentKind = 'challan' | 'invoice' | 'seal_photo' | 'damage_photo' | 'other'
+export type TaskStatus = 'open' | 'in_progress' | 'done' | 'cancelled'
+export type TaskPriority = 'low' | 'normal' | 'high' | 'urgent'
 
 type Timestamps = { created_at: string; updated_at: string }
 
@@ -848,6 +850,71 @@ export interface Database {
           },
         ]
       }
+      staff_tasks: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          priority: TaskPriority
+          status: TaskStatus
+          assigned_to: string | null
+          assigned_by: string | null
+          due_at: string | null
+          started_at: string | null
+          completed_at: string | null
+          staff_note: string | null
+          order_id: string | null
+          grn_id: string | null
+          product_id: string | null
+          bin_id: string | null
+        } & Timestamps
+        Insert: never // created by assign_task()
+        Update: { status?: TaskStatus; staff_note?: string | null }
+        Relationships: [
+          {
+            foreignKeyName: 'staff_tasks_assigned_to_fkey'
+            columns: ['assigned_to']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'staff_tasks_assigned_by_fkey'
+            columns: ['assigned_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'staff_tasks_order_id_fkey'
+            columns: ['order_id']
+            isOneToOne: false
+            referencedRelation: 'orders'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'staff_tasks_grn_id_fkey'
+            columns: ['grn_id']
+            isOneToOne: false
+            referencedRelation: 'grns'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'staff_tasks_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'staff_tasks_bin_id_fkey'
+            columns: ['bin_id']
+            isOneToOne: false
+            referencedRelation: 'bins'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       v_product_stock: {
@@ -963,6 +1030,19 @@ export interface Database {
           to_location: string | null
           performed_by_name: string | null
           performed_by: string | null
+        }
+        Relationships: []
+      }
+      v_staff_workload: {
+        Row: {
+          staff_id: string
+          full_name: string | null
+          email: string | null
+          role: AppRole
+          open_tasks: number
+          in_progress_tasks: number
+          overdue_tasks: number
+          active_tasks: number
         }
         Relationships: []
       }
@@ -1116,6 +1196,20 @@ export interface Database {
       resolve_grn_discrepancy: { Args: { p_grn_id: string; p_note: string }; Returns: Json }
       cancel_grn: { Args: { p_grn_id: string; p_reason?: string | null }; Returns: Json }
       grn_dashboard: { Args: Record<string, never>; Returns: Json }
+      warehouse_status: { Args: Record<string, never>; Returns: Json }
+      set_warehouse_status: { Args: { p: Json }; Returns: Json }
+      least_loaded_staff: { Args: { p_exclude?: string | null }; Returns: string | null }
+      assign_task: { Args: { p: Json }; Returns: Database['public']['Tables']['staff_tasks']['Row'] }
+      update_task_status: {
+        Args: { p_task_id: string; p_status: TaskStatus; p_note?: string | null }
+        Returns: Database['public']['Tables']['staff_tasks']['Row']
+      }
+      reassign_task: {
+        Args: { p_task_id: string; p_assigned_to: string }
+        Returns: Database['public']['Tables']['staff_tasks']['Row']
+      }
+      balance_open_tasks: { Args: Record<string, never>; Returns: Json }
+      staff_performance: { Args: { p_days?: number }; Returns: Json }
     }
     Enums: {
       app_role: AppRole
@@ -1133,6 +1227,8 @@ export interface Database {
       grn_status: GrnStatus
       seal_status: SealStatus
       grn_document_kind: GrnDocumentKind
+      task_status: TaskStatus
+      task_priority: TaskPriority
     }
     CompositeTypes: Record<string, never>
   }

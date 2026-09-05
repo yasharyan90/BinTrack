@@ -24,7 +24,7 @@
 | `supabase/migrations/0002_grn.sql` | Goods-receipt module — vendors, purchase orders, GRNs, lines, put-aways, documents, timeline; RPCs, RLS, storage bucket. |
 | `supabase/seed.sql` | Deterministic mock data generator — 1 warehouse, 4 rows, 160 bins, 800 SKUs, stock, expiry lots, sample orders. |
 | `supabase/functions/` | Edge Functions: `csv-import`, `alert-digest`, `label-pdf`, `order-webhook`, plus `_shared/` and Deno tests. |
-| `supabase/tests/` | pgTAP suites — RLS (`001`), movement invariants (`002`), FEFO allocation and scan verification (`003`), goods receipt end to end (`004`). |
+| `supabase/tests/` | pgTAP suites — RLS (`001`), movement invariants (`002`), FEFO allocation and scan verification (`003`), goods receipt end to end (`004`), warehouse status + staff tasks + performance (`005`). |
 | `supabase/templates/` | Downloadable CSV templates for each import kind. |
 | `web/` | The React 18 + Vite + TypeScript app — every screen in the app-flow document. |
 | `.github/workflows/ci.yml` | CI: lint, typecheck, unit tests, build, `supabase db lint`, pgTAP, Deno checks. |
@@ -248,7 +248,9 @@ Every route in `docs/03-APP-FLOW.md` is implemented.
 | `/admin/counts` | admin | Create, monitor, review variances, approve (posts corrections). |
 | `/admin/import`, `/admin/export` | admin | Four-step CSV import with live progress; export of every reporting view. |
 | `/admin/labels` | admin | Bin QR and product barcode PDF sheets. |
-| `/admin/users`, `/admin/settings` | admin | Roles with typed confirmation; alert thresholds and picking options. |
+| `/tasks` | staff | Written tasks from the admin, live: start, finish with a note; priority and due dates; links to the order / GRN / product / bin the task is about. |
+| `/admin/staff` | admin | Warehouse open/closed switch, staff performance dashboard (picks, accuracy, receipts, put-aways, tasks, share of work vs fair share), assign tasks in writing (auto-assigns to the least-loaded person), re-balance open work. |
+| `/admin/users`, `/admin/settings` | admin | Roles with typed confirmation; alert thresholds, picking options and warehouse hours (10:00–19:00 by default, open days, closed message). |
 
 ---
 
@@ -275,7 +277,7 @@ Added in `supabase/migrations/0002_grn.sql`. It reuses the existing systems rath
 `supabase/migrations/0001_schema.sql` and `supabase/seed.sql` were applied end-to-end on PostgreSQL 15.19 (with a shim emulating Supabase's `auth`/`storage` schemas and roles), and the assertions in `supabase/tests/` were executed against that database:
 
 - Migration + seed apply cleanly and produce exactly the documented data: **1 warehouse · 4 rows · 160 bins · 800 products · 1,503 stock lots · 1,564 movements · 40 orders · 117 pick tasks · 239 alerts across all 8 alert types**.
-- **110 assertions pass** — 18 RLS (`001`), 20 movement invariants (`002`), 21 allocation and scan verification (`003`), 51 goods receipt (`004`: the spec's worked example, *ordered 100 / received 98 / accepted 96 / damaged 2 / short 2*, ends with inventory up by exactly 96; wrong SKU blocked and logged; broken seal alerts; second partial truck sees 98 previously received; completed GRN undeletable).
+- **141 assertions pass** — 18 RLS (`001`), 20 movement invariants (`002`), 21 allocation and scan verification (`003`), 31 warehouse status, task assignment, fair distribution and performance (`005`), 51 goods receipt (`004`: the spec's worked example, *ordered 100 / received 98 / accepted 96 / damaged 2 / short 2*, ends with inventory up by exactly 96; wrong SKU blocked and logged; broken seal alerts; second partial truck sees 98 previously received; completed GRN undeletable).
 - Invariants hold: no `reserved > quantity`, no negative quantities, no expired lot left `available`, reservations equal open pick-task quantities, every `location_code` matches `WH-ROW-BIN`.
 - FEFO proven where it matters: with the soonest-expiring lot deliberately placed in the *farthest* row, allocation still consumes it first, while the pick list is still ordered for the shortest walk.
 - No oversell: a competing order for the same SKU is `partially_allocated` with the shortfall recorded as a short task, never promised twice.
@@ -285,12 +287,12 @@ Added in `supabase/migrations/0002_grn.sql`. It reuses the existing systems rath
 ### Frontend — verified by building and running it
 - `npm run lint` — clean, zero warnings.
 - `npx tsc --noEmit` — clean, for both the app and the e2e project; no `any` at an RPC call site.
-- `npm test` — **64 tests pass**, including a jsdom smoke suite that mounts the real `App` (providers, router, shell, lazy pages) and proves the guards: a visitor is bounced to sign-in, staff see the warehouse nav but not the admin section, an admin sees both plus the alert bell, and staff hitting `/admin/products` are redirected instead of shown the catalogue.
+- `npm test` — **66 tests pass**, including a jsdom smoke suite that mounts the real `App` (providers, router, shell, lazy pages) and proves the guards and the new screens: a visitor is bounced to sign-in, staff reach `/tasks`, admins get `/admin/staff` with the open/closed switch, staff see the warehouse nav but not the admin section, an admin sees both plus the alert bell, and staff hitting `/admin/products` are redirected instead of shown the catalogue.
 - `npm run build` — production bundle with route-level splitting; the scanner (442 kB) and charts (372 kB) load only on the screens that use them, and the PWA service worker and icons are generated.
 
 ### Not yet run here
 - **Playwright e2e** (`web/e2e/`) is written but needs a live Supabase and a browser download; CI runs it. The five specs cover auth and role guards, search, order intake → scan-verified pick (including the wrong-bin refusal), cross-context realtime, and accessibility basics.
-- **`supabase test db`** needs Docker. The three pgTAP files were instead executed statement-by-statement against the local PostgreSQL 15 described above — all 59 assertions pass — so the SQL and the expectations are both known-good; CI runs them through the real pgTAP harness.
+- **`supabase test db`** needs Docker. The five pgTAP files were instead executed statement-by-statement against the local PostgreSQL 15 described above — all 141 assertions pass — so the SQL and the expectations are both known-good; CI runs them through the real pgTAP harness.
 - **Deno tests** for the Edge Functions are written; Deno was not installed on this machine, so the pure CSV parser was transpiled and its 7 assertions verified under Node instead. CI runs `deno test` and `deno check`.
 
 ### One deviation from the TRD

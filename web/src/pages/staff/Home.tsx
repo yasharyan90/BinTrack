@@ -18,6 +18,10 @@ import { useRecentMovements } from '@/hooks/useMovements'
 import { useRealtime } from '@/hooks/useRealtime'
 import { useAuth } from '@/stores/auth'
 import { useUi } from '@/stores/ui'
+import { useWarehouseStatus, describeHours } from '@/hooks/useWarehouse'
+import { useMyTasks } from '@/hooks/useTasks'
+import { TaskCard } from './MyTasks'
+import { DoorClosed, ClipboardList as TasksIcon } from 'lucide-react'
 import { relativeTime } from '@/lib/utils'
 
 /** Quick actions plus what is in flight — the picker's starting point. */
@@ -29,7 +33,11 @@ export default function Home() {
   const { data: orders = [], isLoading } = useOpenOrders(6)
   const { data: movements = [] } = useRecentMovements(6)
 
-  useRealtime('home', ['orders', 'pick_tasks', 'stock_movements'])
+  const { data: status } = useWarehouseStatus()
+  const { data: myTasks = [] } = useMyTasks()
+  const activeTasks = myTasks.filter((t) => t.status === 'open' || t.status === 'in_progress')
+
+  useRealtime('home', ['orders', 'pick_tasks', 'stock_movements', 'app_settings', 'staff_tasks'])
 
   const firstName = (profile?.full_name ?? '').split(' ')[0]
 
@@ -46,6 +54,35 @@ export default function Home() {
           ) : undefined
         }
       />
+
+      {status && !status.open && (
+        <Card className="mb-4 border-destructive/40 bg-destructive/12">
+          <CardContent className="flex items-start gap-3 p-4 pt-4">
+            <DoorClosed className="mt-0.5 size-6 shrink-0 text-destructive" aria-hidden />
+            <div>
+              <p className="text-h3 text-destructive">The warehouse is closed</p>
+              <p className="text-sm">{status.closed_message ?? 'Operations are paused.'}</p>
+              <p className="mt-1 text-small text-muted-foreground">
+                Opens {describeHours(status)} ({status.timezone}){status.reason === 'manual' ? ' — closed by the admin' : ''}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTasks.length > 0 && (
+        <Card className="mb-4">
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between border-b border-border p-3">
+              <h2 className="flex items-center gap-2 text-h3"><TasksIcon className="size-4 text-muted-foreground" aria-hidden />Your tasks ({activeTasks.length})</h2>
+              <Button asChild variant="ghost" size="sm"><Link to="/tasks">All tasks<ArrowRight className="size-3.5" /></Link></Button>
+            </div>
+            <div className="space-y-2 p-3">
+              {activeTasks.slice(0, 3).map((t) => <TaskCard key={t.id} task={t} busy={false} compact />)}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <QuickAction to="/search" icon={Search} title="Find an item" description="Name, SKU or barcode" />

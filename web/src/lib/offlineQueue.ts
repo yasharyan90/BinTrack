@@ -12,6 +12,9 @@ import { parseError } from './errors'
 
 const KEY = 'bintrack-scan-queue'
 
+/** IndexedDB is missing in some private-browsing modes and in jsdom; without it the queue is simply empty. */
+const hasIdb = typeof indexedDB !== 'undefined'
+
 export type QueuedCall = {
   id: string
   rpc: 'confirm_pick' | 'verify_pick' | 'record_movement'
@@ -21,6 +24,7 @@ export type QueuedCall = {
 }
 
 export async function readQueue(): Promise<QueuedCall[]> {
+  if (!hasIdb) return []
   return (await get<QueuedCall[]>(KEY)) ?? []
 }
 
@@ -36,12 +40,12 @@ export async function enqueue(
     queuedAt: Date.now(),
     attempts: 0,
   }
-  await set(KEY, [...queue, call])
+  if (hasIdb) await set(KEY, [...queue, call])
   return call
 }
 
 export async function clearQueue(): Promise<void> {
-  await del(KEY)
+  if (hasIdb) await del(KEY)
 }
 
 export type ReplayResult = { replayed: number; dropped: number; remaining: number }

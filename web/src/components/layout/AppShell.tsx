@@ -5,6 +5,7 @@ import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { BottomNav } from './BottomNav'
 import { ConnectionBanner } from './ConnectionBanner'
+import { WarehouseStatusBanner } from './WarehouseStatus'
 import { GlobalScannerSheet } from '@/components/scanner/GlobalScannerSheet'
 import { useAuth } from '@/stores/auth'
 import { useTheme } from '@/stores/theme'
@@ -30,7 +31,7 @@ export function AppShell() {
   // Admins hear about alerts everywhere; staff only need stock freshness.
   useRealtime(
     isAdmin ? 'shell:admin' : 'shell:staff',
-    isAdmin ? ['alerts', 'stock_levels'] : ['stock_levels'],
+    isAdmin ? ['alerts', 'stock_levels', 'app_settings', 'staff_tasks'] : ['stock_levels', 'app_settings', 'staff_tasks'],
     {
       onChange: (table, payload) => {
         if (table !== 'alerts' || payload.eventType !== 'INSERT') return
@@ -63,6 +64,7 @@ export function AppShell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar />
         <ConnectionBanner />
+        <WarehouseStatusBanner />
         <main className="mx-auto w-full max-w-[1280px] flex-1 px-3 pb-24 pt-4 md:px-6 md:pb-8">
           <Outlet />
         </main>

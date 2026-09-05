@@ -216,6 +216,21 @@ describe('app composition', () => {
     )
   })
 
+  it('staff see their task list and the warehouse-closed notice', async () => {
+    signedInAs({ id: 'staff-1', role: 'staff' })
+    await renderApp('/tasks')
+    expect(await screen.findByRole('heading', { name: 'My tasks' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'My tasks' })).toBeInTheDocument()
+  })
+
+  it('admins get the staff dashboard with the open/closed switch', async () => {
+    signedInAs({ id: 'admin-1', role: 'inventory_admin' })
+    await renderApp('/admin/staff')
+    expect(await screen.findByRole('heading', { name: 'Staff & tasks' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /assign a task/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /balance open tasks/i })).toBeInTheDocument()
+  })
+
   it('renders a friendly page for an unknown route', async () => {
     signedInAs({ id: 'staff-1', role: 'staff' })
     await renderApp('/nowhere-at-all')

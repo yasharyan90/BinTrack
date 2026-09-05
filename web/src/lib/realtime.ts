@@ -20,6 +20,8 @@ export type WatchedTable =
   | 'import_jobs'
   | 'grns'
   | 'grn_lines'
+  | 'app_settings'
+  | 'staff_tasks'
 
 type Row = Record<string, unknown>
 
@@ -49,6 +51,10 @@ function keysFor(table: WatchedTable, row: Row): unknown[][] {
       return [['movements'], ['dashboard']]
     case 'import_jobs':
       return [['imports'], ['import']]
+    case 'app_settings':
+      return [['warehouse-status'], ['settings']]
+    case 'staff_tasks':
+      return [['tasks'], ['staff-workload'], ['staff-performance']]
     case 'grns':
     case 'grn_lines': {
       const grnId = (table === 'grns' ? row.id : row.grn_id) as string | undefined

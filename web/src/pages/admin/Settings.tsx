@@ -9,6 +9,8 @@ import { Switch } from '@/components/ui/switch'
 import { SkeletonRows } from '@/components/ui/skeleton'
 import { useSaveSetting, useSettings } from '@/hooks/useSettings'
 import { useEvaluateAlerts } from '@/hooks/useAlerts'
+import { DAY_NAMES, useSetWarehouseStatus, useWarehouseStatus } from '@/hooks/useWarehouse'
+import { cn } from '@/lib/utils'
 import { useAppToast } from '@/hooks/useAppToast'
 import { DEFAULT_SETTINGS, type AppSettings } from '@/types/app'
 
@@ -142,6 +144,8 @@ export default function Settings() {
         </Card>
 
         <div className="space-y-4">
+          <WarehouseHoursCard />
+
           <Card>
             <CardContent className="space-y-4 p-4 pt-4">
               <h2 className="text-h3">Picking</h2>
@@ -201,5 +205,72 @@ export default function Settings() {
         </div>
       </div>
     </>
+  )
+}
+
+/** Opening hours, the schedule switch and the message staff see when closed. */
+function WarehouseHoursCard() {
+  const { data: status } = useWarehouseStatus()
+  const set = useSetWarehouseStatus()
+  const { showSuccess, showError } = useAppToast()
+  const [open, setOpen] = useState('10:00')
+  const [close, setClose] = useState('19:00')
+  const [days, setDays] = useState<number[]>([1, 2, 3, 4, 5, 6])
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    if (!status) return
+    setOpen(status.open_time)
+    setClose(status.close_time)
+    setDays(status.days)
+    setMessage(status.closed_message ?? '')
+  }, [status])
+
+  if (!status) return null
+  const save = () =>
+    set.mutate(
+      { open_time: open, close_time: close, days, closed_message: message },
+      { onSuccess: () => showSuccess('Opening hours saved', 'Staff see the change immediately.'), onError: (e) => showError(e, 'Could not save the hours') },
+    )
+
+  return (
+    <Card>
+      <CardContent className="space-y-4 p-4 pt-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-h3">Warehouse hours</h2>
+            <p className="text-small text-muted-foreground">
+              Now {status.open ? 'open' : 'closed'} ({status.reason.replace('_', ' ')}) · local time {status.local_time.slice(11)} {status.timezone}
+            </p>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            Follow schedule
+            <Switch checked={status.auto_schedule} onCheckedChange={(v) => set.mutate({ auto_schedule: v }, { onError: (e) => showError(e, 'Could not update') })} />
+          </label>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Opens at" htmlFor="wh-open"><Input id="wh-open" type="time" value={open} onChange={(e) => setOpen(e.target.value)} /></Field>
+          <Field label="Closes at" htmlFor="wh-close"><Input id="wh-close" type="time" value={close} onChange={(e) => setClose(e.target.value)} /></Field>
+        </div>
+        <Field label="Open days">
+          <div className="flex flex-wrap gap-1.5">
+            {DAY_NAMES.map((name, i) => {
+              const d = i + 1
+              const on = days.includes(d)
+              return (
+                <button key={name} type="button" aria-pressed={on} onClick={() => setDays((prev) => (on ? prev.filter((x) => x !== d) : [...prev, d].sort()))}
+                  className={cn('rounded-full border px-3 py-1 text-sm', on ? 'border-transparent bg-primary text-primary-foreground' : 'border-border hover:bg-accent')}>
+                  {name}
+                </button>
+              )
+            })}
+          </div>
+        </Field>
+        <Field label="Message shown to staff while closed" htmlFor="wh-msg">
+          <Input id="wh-msg" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="The warehouse is closed. Back at 10:00." />
+        </Field>
+        <Button loading={set.isPending} onClick={save}><Save />Save hours</Button>
+      </CardContent>
+    </Card>
   )
 }

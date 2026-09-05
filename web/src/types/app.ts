@@ -16,6 +16,8 @@ import type {
   SealStatus,
   StockStatus,
   Tables,
+  TaskPriority,
+  TaskStatus,
 } from './database'
 
 export type Profile = Tables<'profiles'>
@@ -307,3 +309,85 @@ export type GrnDashboard = {
   units_put_away_today: number
   generated_at: string
 }
+
+// ---------------------------------------------------------------------------
+// Warehouse status, staff tasks, performance
+// ---------------------------------------------------------------------------
+export type WarehouseStatus = {
+  open: boolean
+  reason: 'manual' | 'outside_hours' | 'in_hours' | 'unconfigured'
+  is_open: boolean
+  auto_schedule: boolean
+  open_time: string
+  close_time: string
+  days: number[]
+  timezone: string
+  closed_message: string | null
+  local_time: string
+  checked_at: string
+}
+
+export type StaffTask = Tables<'staff_tasks'> & {
+  assignee?: { id: string; full_name: string | null; email: string | null } | null
+  assigner?: { id: string; full_name: string | null } | null
+}
+
+export type NewTaskInput = {
+  title: string
+  description?: string | null
+  priority?: TaskPriority
+  /** Leave unset to auto-assign to the least-loaded staff member. */
+  assigned_to?: string | null
+  due_at?: string | null
+  order_id?: string | null
+  grn_id?: string | null
+  product_id?: string | null
+  bin_id?: string | null
+}
+
+export type StaffPerformanceRow = {
+  id: string
+  full_name: string | null
+  email: string | null
+  is_active: boolean
+  joined_at: string
+  picks: number
+  units_picked: number
+  clean_picks: number
+  mismatches: number
+  accuracy_pct: number | null
+  inwards: number
+  outwards: number
+  transfers: number
+  units_received: number
+  grn_lines_counted: number
+  putaways: number
+  units_put_away: number
+  count_lines: number
+  tasks_open: number
+  tasks_in_progress: number
+  tasks_done: number
+  tasks_overdue: number
+  tasks_on_time: number
+  avg_hours_to_complete: number
+  work_units: number
+  share_pct: number
+}
+
+export type StaffPerformance = {
+  days: number
+  since: string
+  total_work_units: number
+  staff_count: number
+  fair_share_pct: number
+  staff: StaffPerformanceRow[]
+}
+
+export type BalanceResult = {
+  moved: number
+  considered: number
+  staff: number
+  workload: { staff_id: string; name: string | null; active_tasks: number }[]
+}
+
+export type { TaskStatus, TaskPriority }

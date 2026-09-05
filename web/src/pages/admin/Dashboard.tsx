@@ -21,6 +21,7 @@ import { StockByRowChart } from '@/components/dashboard/StockByRowChart'
 import { RowHeatmap } from '@/components/dashboard/RowHeatmap'
 import { AlertItem } from '@/components/alerts/AlertItem'
 import { LiveIndicator } from '@/components/layout/ConnectionBanner'
+import { WarehouseToggle } from '@/components/layout/WarehouseStatus'
 import { LocationBadge } from '@/components/stock/LocationBadge'
 import { ExpiryChip } from '@/components/stock/ExpiryChip'
 import { OrderStatusChip } from '@/components/stock/StatusChip'
@@ -55,6 +56,7 @@ export default function Dashboard() {
   const [pickers, setPickers] = useState<{ id: string; name: string; order_id: string }[]>([])
 
   useRealtime('dashboard', [
+    'app_settings',
     'alerts',
     'stock_levels',
     'orders',
@@ -71,6 +73,7 @@ export default function Dashboard() {
         description="Stock health across the warehouse, updating as it happens."
         actions={
           <>
+            <WarehouseToggle />
             <LiveIndicator />
             <Button
               variant="secondary"

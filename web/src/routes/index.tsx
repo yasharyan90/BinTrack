@@ -25,6 +25,8 @@ const Movements = lazy(() => import('@/pages/staff/Movements'))
 const CountEntry = lazy(() => import('@/pages/staff/CountEntry'))
 const Profile = lazy(() => import('@/pages/staff/Profile'))
 const More = lazy(() => import('@/pages/staff/More'))
+const MyTasks = lazy(() => import('@/pages/staff/MyTasks'))
+const StaffAdmin = lazy(() => import('@/pages/admin/Staff'))
 
 const GrnList = lazy(() => import('@/pages/grn/GrnList'))
 const GrnNew = lazy(() => import('@/pages/grn/GrnNew'))
@@ -80,6 +82,7 @@ export function AppRoutes() {
             <Route path="/scan" element={<ScanHub />} />
             <Route path="/movements" element={<Movements />} />
             <Route path="/counts/:sessionId" element={<CountEntry />} />
+            <Route path="/tasks" element={<MyTasks />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/more" element={<More />} />
 
@@ -96,6 +99,7 @@ export function AppRoutes() {
               <Route path="/admin/export" element={<ExportPage />} />
               <Route path="/admin/expiry" element={<Expiry />} />
               <Route path="/admin/counts" element={<Counts />} />
+              <Route path="/admin/staff" element={<StaffAdmin />} />
               <Route path="/admin/users" element={<Users />} />
               <Route path="/admin/settings" element={<SettingsPage />} />
               <Route path="/admin/labels" element={<Labels />} />

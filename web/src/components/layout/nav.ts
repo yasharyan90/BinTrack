@@ -18,6 +18,7 @@ import {
   Tags,
   Timer,
   Truck,
+  UserRoundCog,
   Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -34,6 +35,7 @@ export const STAFF_NAV: NavItem[] = [
   { to: '/transfer', label: 'Transfer', icon: Repeat },
   { to: '/scan', label: 'Scan', icon: ScanLine },
   { to: '/movements', label: 'Movements', icon: BarChart3 },
+  { to: '/tasks', label: 'My tasks', icon: ClipboardList },
 ]
 
 export const ADMIN_NAV: NavItem[] = [
@@ -47,6 +49,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: '/admin/import', label: 'Import', icon: FileUp },
   { to: '/admin/export', label: 'Export', icon: Download },
   { to: '/admin/labels', label: 'Labels', icon: Tags },
+  { to: '/admin/staff', label: 'Staff & tasks', icon: UserRoundCog },
   { to: '/admin/users', label: 'Users', icon: Users },
   { to: '/admin/settings', label: 'Settings', icon: Settings },
 ]

@@ -63,4 +63,9 @@ export const qk = {
   grns: (filters: unknown) => ['grns', filters] as const,
   grn: (id: string) => ['grn', id] as const,
   grnDashboard: () => ['grn-dashboard'] as const,
+  warehouseStatus: () => ['warehouse-status'] as const,
+  tasks: (filters: unknown) => ['tasks', filters] as const,
+  myTasks: () => ['tasks', 'mine'] as const,
+  staffPerformance: (days: number) => ['staff-performance', days] as const,
+  staffWorkload: () => ['staff-workload'] as const,
 }
