@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Bell, Info, Mail, ScanLine, Search } from 'lucide-react'
 import { AuthCard, AuthFrame } from './AuthLayout'
+import { LogoMark } from '@/components/layout/Logo'
 import { AboutDialog } from './AboutDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -125,6 +126,7 @@ export default function Login() {
         <main className="flex flex-1 items-center px-4 py-10 sm:px-8 lg:px-16">
           <div className="max-w-2xl space-y-8 text-white animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
             <div className="space-y-4">
+              <LogoMark size="xl" className="shadow-[0_0_40px_-8px_rgba(46,224,160,0.6)]" />
               <p className="label-small text-white/70">Multi-warehouse inventory &amp; location tracking</p>
               <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
                 Every item has an address.

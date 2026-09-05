@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { LogoMark } from '@/components/layout/Logo'
 
 const FLOW = [
   {
@@ -45,7 +46,10 @@ export function AboutDialog({ open, onOpenChange }: { open: boolean; onOpenChang
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>About BinTrack</DialogTitle>
+          <div className="flex items-center gap-3">
+            <LogoMark size="lg" />
+            <DialogTitle>About BinTrack</DialogTitle>
+          </div>
           <DialogDescription>
             Multi-warehouse inventory and location tracking, built on Supabase and React.
           </DialogDescription>

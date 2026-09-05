@@ -1,3 +1,5 @@
+<p align="center"><img src="web/public/images/logo-256.png" width="120" alt="BinTrack logo" /></p>
+
 # BinTrack — Multi-Warehouse Inventory & Location Tracking (Supabase)
 
 > **PS-3 · Pure Hard Development**
